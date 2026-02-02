@@ -13,10 +13,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #ffe4e1;
+            background-color: #ffe4e1; /* Soft Pink Background */
             font-family: 'Arial', sans-serif;
-            overflow: hidden;
+            overflow: hidden; /* Prevents scrolling when button moves */
         }
+
         .card {
             background: white;
             padding: 40px;
@@ -25,31 +26,41 @@
             text-align: center;
             width: 90%;
             max-width: 400px;
+            position: relative;
+            z-index: 10;
         }
+
         .gif-area {
             width: 100%;
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
         }
-        /* Style specifically for the video player */
+
         .gif-area video {
             width: 100%;
-            max-width: 250px; /* Limits size so it doesn't get huge */
+            max-width: 250px;
             height: auto;
             border-radius: 10px;
             object-fit: cover;
+            pointer-events: none; /* Prevents clicking on the video */
         }
+
         h1 {
             color: #ff4d6d;
             font-size: 26px;
             margin: 20px 0;
+            line-height: 1.4;
         }
+
         .btn-container {
             margin-top: 20px;
-            height: 100px; /* increased so the No button has space to move */
+            display: flex;
+            justify-content: center;
+            gap: 20px;
             position: relative;
         }
+
         button {
             padding: 12px 30px;
             font-size: 18px;
@@ -59,12 +70,39 @@
             font-weight: bold;
             color: white;
             transition: transform 0.2s;
-            margin: 0 10px;
+            /* Important for keeping buttons layout clean initially */
+            position: relative; 
         }
-        #yesBtn { background-color: #ff4d6d; }
-        #yesBtn:hover { transform: scale(1.1); }
-        #noBtn { background-color: #333; position: absolute; left: 60%; top: 10px; }
-        .hidden { display: none; }
+
+        #yesBtn {
+            background-color: #ff4d6d;
+            z-index: 20; /* Ensures Yes is always clickable */
+        }
+        
+        #yesBtn:hover {
+            transform: scale(1.1);
+        }
+
+        #noBtn {
+            background-color: #333;
+        }
+        
+        /* This class is added via JS to make the button float freely */
+        .absolute-move {
+            position: fixed !important; /* Breaks out of the card flow */
+            transition: left 0.1s ease, top 0.1s ease; /* Smooth glide */
+            z-index: 15;
+        }
+
+        .hidden {
+            display: none;
+        }
+        
+        /* Mobile adjustment for text size */
+        @media (max-width: 480px) {
+            h1 { font-size: 22px; }
+            button { padding: 10px 20px; font-size: 16px; }
+        }
     </style>
 </head>
 <body>
@@ -76,7 +114,7 @@
                     Your browser does not support the video tag.
                 </video>
             </div>
-            <h1>Afreen will you be my valentine?</h1>
+            <h1>Afreen, will you be my valentine?</h1>
             <div class="btn-container">
                 <button id="yesBtn">Yes 💖</button>
                 <button id="noBtn">No</button>
@@ -99,45 +137,63 @@
         const noBtn = document.getElementById('noBtn');
         const questionDiv = document.getElementById('question');
         const successDiv = document.getElementById('success');
-        const btnContainer = document.querySelector('.btn-container');
 
+        // Logic to move the button to a random position on the ENTIRE screen
         function moveButton() {
-            // Keep the button inside the btn-container bounds
-            const maxX = Math.max(0, btnContainer.clientWidth - noBtn.offsetWidth);
-            const maxY = Math.max(0, btnContainer.clientHeight - noBtn.offsetHeight);
-            
-            const x = Math.random() * maxX;
-            const y = Math.random() * maxY;
-            
-            noBtn.style.left = `${x}px`;
-            noBtn.style.top = `${y}px`;
+            // 1. Add the class that allows it to float anywhere on screen
+            noBtn.classList.add('absolute-move');
+
+            // 2. Calculate the viewport dimensions (minus button size to keep it visible)
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const btnWidth = noBtn.offsetWidth;
+            const btnHeight = noBtn.offsetHeight;
+
+            // 3. Generate random coordinates
+            const randomX = Math.random() * (viewportWidth - btnWidth - 40) + 20; // 20px padding
+            const randomY = Math.random() * (viewportHeight - btnHeight - 40) + 20;
+
+            // 4. Apply new positions
+            noBtn.style.left = `${randomX}px`;
+            noBtn.style.top = `${randomY}px`;
         }
 
-        // Move on hover
+        // --- Desktop Interactions ---
         noBtn.addEventListener('mouseover', moveButton);
-
-        // For touch devices: move and prevent default so the click isn't fired
-        noBtn.addEventListener('touchstart', (e) => { 
-            e.preventDefault(); 
-            moveButton(); 
-        }, { passive: false });
-
-        // Prevent actual click action: move the button instead of letting it be clicked
         noBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             moveButton();
         });
 
+        // --- Mobile Touch Interactions (The Fix) ---
+        // 'touchstart' fires the moment a finger touches the element
+        noBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevents the browser from converting this to a click
+            moveButton();
+        }, { passive: false });
+
+        // --- Yes Button Logic ---
         yesBtn.addEventListener('click', () => {
             questionDiv.classList.add('hidden');
             successDiv.classList.remove('hidden');
-            confetti({ 
-                particleCount: 150, 
-                spread: 70, 
-                origin: { y: 0.6 } 
+            
+            // Trigger Confetti
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 }
             });
+            
+            // Optional: Trigger a second burst for dramatic effect
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    spread: 100,
+                    origin: { y: 0.6 }
+                });
+            }, 500);
         });
     </script>
 </body>
 </html>
+
