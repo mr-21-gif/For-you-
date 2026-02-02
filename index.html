@@ -26,12 +26,19 @@
             width: 90%;
             max-width: 400px;
         }
-        .gif-area img {
+        .gif-area {
             width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        /* Style specifically for the video player */
+        .gif-area video {
+            width: 100%;
+            max-width: 250px; /* Limits size so it doesn't get huge */
             height: auto;
-            max-height: 200px;
-            object-fit: cover;
             border-radius: 10px;
+            object-fit: cover;
         }
         h1 {
             color: #ff4d6d;
@@ -41,7 +48,7 @@
         .btn-container {
             margin-top: 20px;
             height: 60px;
-            position: relative; /* Added relative positioning for safety */
+            position: relative;
         }
         button {
             padding: 12px 30px;
@@ -64,8 +71,10 @@
     <div class="card">
         <div id="question">
             <div class="gif-area">
-                <img src="https://media1.tenor.com/m/h9C8j0MhCoAAAAAC/puss-in-boots-cat.gif" 
-                     alt="Cute Cat">
+                <video autoplay loop muted playsinline>
+                    <source src="1000091870.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
             </div>
             <h1>Afreen will you be my valentine?</h1>
             <div class="btn-container">
@@ -76,8 +85,10 @@
         
         <div id="success" class="hidden">
             <div class="gif-area">
-                <img src="https://media1.tenor.com/m/7zKdaT8vjH8AAAAC/excited-hockey.gif" 
-                     alt="Yay">
+                <video autoplay loop muted playsinline>
+                    <source src="1000091872.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
             </div>
             <h1>YAY! 💖</h1>
         </div>
@@ -90,7 +101,7 @@
         const successDiv = document.getElementById('success');
 
         function moveButton() {
-            // Updated logic to keep button within the screen bounds
+            // Updated logic to keep button within the card area or screen
             const maxX = window.innerWidth - noBtn.offsetWidth - 20;
             const maxY = window.innerHeight - noBtn.offsetHeight - 20;
             
