@@ -6,6 +6,8 @@
     <title>For Aqib javid</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;600&display=swap');
+
         body {
             margin: 0;
             padding: 0;
@@ -13,13 +15,15 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #ffe4e1; /* Soft Pink Background */
-            font-family: 'Arial', sans-serif;
-            overflow: hidden; /* Prevents scrolling when button moves */
+            background-color: #ffe4e1;
+            font-family: 'Poppins', sans-serif; /* Cleaner font */
+            overflow: hidden;
+            transition: background-color 1s ease;
         }
 
+        /* The Main Card */
         .card {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -28,6 +32,7 @@
             max-width: 400px;
             position: relative;
             z-index: 10;
+            transition: opacity 0.5s ease;
         }
 
         .gif-area {
@@ -43,7 +48,7 @@
             height: auto;
             border-radius: 10px;
             object-fit: cover;
-            pointer-events: none; /* Prevents clicking on the video */
+            pointer-events: none;
         }
 
         h1 {
@@ -69,44 +74,107 @@
             cursor: pointer;
             font-weight: bold;
             color: white;
-            transition: transform 0.2s;
-            /* Important for keeping buttons layout clean initially */
+            transition: transform 0.2s, background 0.3s;
             position: relative; 
         }
 
-        #yesBtn {
-            background-color: #ff4d6d;
-            z-index: 20; /* Ensures Yes is always clickable */
-        }
+        #yesBtn { background-color: #ff4d6d; z-index: 20; }
+        #yesBtn:hover { transform: scale(1.1); box-shadow: 0 0 15px #ff4d6d80; }
+
+        #noBtn { background-color: #333; }
         
-        #yesBtn:hover {
-            transform: scale(1.1);
+        /* The Romantic Note Button (Hidden initially) */
+        #noteTriggerBtn {
+            background-color: #fff;
+            color: #ff4d6d;
+            border: 2px solid #ff4d6d;
+            margin-top: 20px;
+            display: none; /* Hidden until Yes is clicked */
+            animation: pulse 2s infinite;
         }
 
-        #noBtn {
-            background-color: #333;
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
-        
-        /* This class is added via JS to make the button float freely */
+
         .absolute-move {
-            position: fixed !important; /* Breaks out of the card flow */
-            transition: left 0.1s ease, top 0.1s ease; /* Smooth glide */
+            position: fixed !important;
+            transition: left 0.1s ease, top 0.1s ease;
             z-index: 15;
         }
 
-        .hidden {
-            display: none;
+        .hidden { display: none; }
+
+        /* --- ROMANTIC NOTE STYLES --- */
+        #noteOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85); /* Dark dimming */
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+        }
+
+        #noteOverlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .note-paper {
+            background: #fff9f0; /* Paper color */
+            width: 85%;
+            max-width: 500px;
+            padding: 40px;
+            border-radius: 5px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 1s ease;
         }
         
-        /* Mobile adjustment for text size */
+        #noteOverlay.active .note-paper {
+            transform: translateY(0);
+        }
+
+        .note-text {
+            font-family: 'Dancing Script', cursive; /* Handwriting font */
+            font-size: 24px;
+            color: #4a4a4a;
+            line-height: 1.6;
+            min-height: 100px;
+            white-space: pre-wrap; /* Preserves line breaks */
+        }
+
+        .signature {
+            margin-top: 30px;
+            text-align: right;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            color: #888;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        /* Mobile adjustments */
         @media (max-width: 480px) {
             h1 { font-size: 22px; }
             button { padding: 10px 20px; font-size: 16px; }
+            .note-text { font-size: 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="card">
+
+    <div class="card" id="mainCard">
         <div id="question">
             <div class="gif-area">
                 <video autoplay loop muted playsinline>
@@ -129,71 +197,97 @@
                 </video>
             </div>
             <h1>YAY! 💖</h1>
+            <button id="noteTriggerBtn">I wrote something for you... 💌</button>
         </div>
     </div>
+
+    <div id="noteOverlay">
+        <div class="note-paper">
+            <div class="note-text" id="typewriterText"></div>
+            <div class="signature" id="signature">- Yours, Always</div>
+        </div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/10/05/audio_6861a49f70.mp3?filename=piano-moment-119614.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         const yesBtn = document.getElementById('yesBtn');
         const noBtn = document.getElementById('noBtn');
         const questionDiv = document.getElementById('question');
         const successDiv = document.getElementById('success');
+        const noteTriggerBtn = document.getElementById('noteTriggerBtn');
+        const noteOverlay = document.getElementById('noteOverlay');
+        const typewriterText = document.getElementById('typewriterText');
+        const signature = document.getElementById('signature');
+        const bgMusic = document.getElementById('bgMusic');
 
-        // Logic to move the button to a random position on the ENTIRE screen
+        // --- CUSTOMIZE YOUR MESSAGE HERE ---
+        const romanticMessage = `Aqib,
+
+I know this is just a silly website, but I really wanted to make you smile. 
+
+You mean so much to me. Being with you makes everything better. I love your laugh, your kindness, and just being around you.
+
+Thank you for being my Valentine. ❤️`;
+
+        // Logic to move the No button
         function moveButton() {
-            // 1. Add the class that allows it to float anywhere on screen
             noBtn.classList.add('absolute-move');
-
-            // 2. Calculate the viewport dimensions (minus button size to keep it visible)
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             const btnWidth = noBtn.offsetWidth;
             const btnHeight = noBtn.offsetHeight;
-
-            // 3. Generate random coordinates
-            const randomX = Math.random() * (viewportWidth - btnWidth - 40) + 20; // 20px padding
+            const randomX = Math.random() * (viewportWidth - btnWidth - 40) + 20; 
             const randomY = Math.random() * (viewportHeight - btnHeight - 40) + 20;
-
-            // 4. Apply new positions
             noBtn.style.left = `${randomX}px`;
             noBtn.style.top = `${randomY}px`;
         }
 
-        // --- Desktop Interactions ---
         noBtn.addEventListener('mouseover', moveButton);
-        noBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            moveButton();
-        });
+        noBtn.addEventListener('click', (e) => { e.preventDefault(); moveButton(); });
+        noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveButton(); }, { passive: false });
 
-        // --- Mobile Touch Interactions (The Fix) ---
-        // 'touchstart' fires the moment a finger touches the element
-        noBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevents the browser from converting this to a click
-            moveButton();
-        }, { passive: false });
-
-        // --- Yes Button Logic ---
+        // Yes Button Logic
         yesBtn.addEventListener('click', () => {
             questionDiv.classList.add('hidden');
             successDiv.classList.remove('hidden');
             
             // Trigger Confetti
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 }
-            });
-            
-            // Optional: Trigger a second burst for dramatic effect
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            setTimeout(() => { confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 } }); }, 500);
+
+            // Show the "Read Note" button after 2 seconds
             setTimeout(() => {
-                confetti({
-                    particleCount: 100,
-                    spread: 100,
-                    origin: { y: 0.6 }
-                });
-            }, 500);
+                noteTriggerBtn.style.display = 'inline-block';
+            }, 2000);
         });
+
+        // Note Trigger Logic
+        noteTriggerBtn.addEventListener('click', () => {
+            noteOverlay.classList.add('active');
+            bgMusic.volume = 0.3; // Set volume low
+            bgMusic.play().catch(e => console.log("Audio play failed usually due to browser permissions"));
+            
+            // Start Typewriter effect after a slight delay
+            setTimeout(typeWriter, 1000);
+        });
+
+        // Typewriter Effect
+        let i = 0;
+        function typeWriter() {
+            if (i < romanticMessage.length) {
+                // Add next character
+                typewriterText.innerHTML += romanticMessage.charAt(i);
+                i++;
+                // Random typing speed for realism (between 30ms and 80ms)
+                setTimeout(typeWriter, Math.random() * 50 + 30);
+            } else {
+                // Show signature when done
+                signature.style.opacity = '1';
+            }
+        }
     </script>
 </body>
 </html>
-
